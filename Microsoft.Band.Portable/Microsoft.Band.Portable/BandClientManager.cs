@@ -73,18 +73,19 @@ namespace Microsoft.Band.Portable
         {
 #if __ANDROID__
             var nativeClient = NativeBandClientManager.Instance.Create(Application.Context, info.Native);
-            if (nativeClient.IsConnected)
+
+            if (!nativeClient.IsConnected)
             {
-                throw new BandException($"Aleady connected to Band '{info.Name}'.", BandErrorType.ServiceError);
+				await nativeClient.ConnectTaskAsync();
             }
-            var result = await nativeClient.ConnectTaskAsync() == ConnectionState.Connected;
+
             return new BandClient(nativeClient);
 #elif __IOS__
-            if (info.Native.IsConnected)
+            if (!info.Native.IsConnected)
             {
-                throw new BandException($"Aleady connected to Band '{info.Native.Name}'.");
+				await NativeBandClientManager.Instance.ConnectTaskAsync(info.Native);
             }
-            await NativeBandClientManager.Instance.ConnectTaskAsync(info.Native);
+            
             return new BandClient(info.Native);
 #elif WINDOWS_PHONE_APP
             var nativeClient = await NativeBandClientManager.Instance.ConnectAsync(info.Native);
